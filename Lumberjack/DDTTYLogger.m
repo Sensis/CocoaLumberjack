@@ -688,7 +688,7 @@ static DDTTYLogger *sharedInstance;
 		CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
 		
 		unsigned char pixel[4];
-		CGContextRef context = CGBitmapContextCreate(&pixel, 1, 1, 8, 4, rgbColorSpace, kCGBitmapAlphaInfoMask & kCGImageAlphaNoneSkipLast);
+		CGContextRef context = CGBitmapContextCreate(&pixel, 1, 1, 8, 4, rgbColorSpace, (CGBitmapInfo)(kCGBitmapAlphaInfoMask & kCGImageAlphaNoneSkipLast));
 		
 		CGContextSetFillColorWithColor(context, [color CGColor]);
 		CGContextFillRect(context, CGRectMake(0, 0, 1, 1));
@@ -890,8 +890,8 @@ static DDTTYLogger *sharedInstance;
 	__block BOOL result;
 	
 	dispatch_sync(globalLoggingQueue, ^{
-		dispatch_sync(loggerQueue, ^{
-			result = colorsEnabled;
+		dispatch_sync(self->loggerQueue, ^{
+			result = self->colorsEnabled;
 		});
 	});
 	
@@ -902,9 +902,9 @@ static DDTTYLogger *sharedInstance;
 {
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		colorsEnabled = newColorsEnabled;
+		self->colorsEnabled = newColorsEnabled;
 		
-		if ([colorProfilesArray count] == 0) {
+		if ([self->colorProfilesArray count] == 0) {
 			[self loadDefaultColorProfiles];
 		}
 	}};
@@ -925,7 +925,7 @@ static DDTTYLogger *sharedInstance;
 	dispatch_queue_t globalLoggingQueue = [DDLog loggingQueue];
 	
 	dispatch_async(globalLoggingQueue, ^{
-		dispatch_async(loggerQueue, block);
+		dispatch_async(self->loggerQueue, block);
 	});
 }
 
@@ -947,7 +947,7 @@ static DDTTYLogger *sharedInstance;
 		NSLogInfo(@"DDTTYLogger: newColorProfile: %@", newColorProfile);
 		
 		NSUInteger i = 0;
-		for (DDTTYLoggerColorProfile *colorProfile in colorProfilesArray)
+		for (DDTTYLoggerColorProfile *colorProfile in self->colorProfilesArray)
 		{
 			if ((colorProfile->mask == mask) && (colorProfile->context == ctxt))
 			{
@@ -957,10 +957,10 @@ static DDTTYLogger *sharedInstance;
 			i++;
 		}
 		
-		if (i < [colorProfilesArray count])
-			[colorProfilesArray replaceObjectAtIndex:i withObject:newColorProfile];
+		if (i < [self->colorProfilesArray count])
+			[self->colorProfilesArray replaceObjectAtIndex:i withObject:newColorProfile];
 		else
-			[colorProfilesArray addObject:newColorProfile];
+			[self->colorProfilesArray addObject:newColorProfile];
 	}};
 	
 	// The design of the setter logic below is taken from the DDAbstractLogger implementation.
@@ -976,7 +976,7 @@ static DDTTYLogger *sharedInstance;
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -995,7 +995,7 @@ static DDTTYLogger *sharedInstance;
 		
 		NSLogInfo(@"DDTTYLogger: newColorProfile: %@", newColorProfile);
 		
-		[colorProfilesDict setObject:newColorProfile forKey:tag];
+		[self->colorProfilesDict setObject:newColorProfile forKey:tag];
 	}};
 	
 	// The design of the setter logic below is taken from the DDAbstractLogger implementation.
@@ -1011,7 +1011,7 @@ static DDTTYLogger *sharedInstance;
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -1026,7 +1026,7 @@ static DDTTYLogger *sharedInstance;
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
 		NSUInteger i = 0;
-		for (DDTTYLoggerColorProfile *colorProfile in colorProfilesArray)
+		for (DDTTYLoggerColorProfile *colorProfile in self->colorProfilesArray)
 		{
 			if ((colorProfile->mask == mask) && (colorProfile->context == context))
 			{
@@ -1036,9 +1036,9 @@ static DDTTYLogger *sharedInstance;
 			i++;
 		}
 		
-		if (i < [colorProfilesArray count])
+		if (i < [self->colorProfilesArray count])
 		{
-			[colorProfilesArray removeObjectAtIndex:i];
+			[self->colorProfilesArray removeObjectAtIndex:i];
 		}
 	}};
 	
@@ -1055,7 +1055,7 @@ static DDTTYLogger *sharedInstance;
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -1066,7 +1066,7 @@ static DDTTYLogger *sharedInstance;
 	
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		[colorProfilesDict removeObjectForKey:tag];
+		[self->colorProfilesDict removeObjectForKey:tag];
 	}};
 	
 	// The design of the setter logic below is taken from the DDAbstractLogger implementation.
@@ -1082,7 +1082,7 @@ static DDTTYLogger *sharedInstance;
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -1091,7 +1091,7 @@ static DDTTYLogger *sharedInstance;
 {
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		[colorProfilesArray removeAllObjects];
+		[self->colorProfilesArray removeAllObjects];
 	}};
 	
 	// The design of the setter logic below is taken from the DDAbstractLogger implementation.
@@ -1107,7 +1107,7 @@ static DDTTYLogger *sharedInstance;
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -1116,7 +1116,7 @@ static DDTTYLogger *sharedInstance;
 {
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		[colorProfilesDict removeAllObjects];
+		[self->colorProfilesDict removeAllObjects];
 	}};
 	
 	// The design of the setter logic below is taken from the DDAbstractLogger implementation.
@@ -1132,7 +1132,7 @@ static DDTTYLogger *sharedInstance;
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -1141,8 +1141,8 @@ static DDTTYLogger *sharedInstance;
 {
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		[colorProfilesArray removeAllObjects];
-		[colorProfilesDict removeAllObjects];
+		[self->colorProfilesArray removeAllObjects];
+		[self->colorProfilesDict removeAllObjects];
 	}};
 	
 	// The design of the setter logic below is taken from the DDAbstractLogger implementation.
@@ -1158,7 +1158,7 @@ static DDTTYLogger *sharedInstance;
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -1280,7 +1280,7 @@ static DDTTYLogger *sharedInstance;
 						   (long)components.minute,
 						   (long)components.second, milliseconds);
 			
-			size_t tsLen = MIN(24-1, len);
+			size_t tsLen = MIN(24-1, (size_t)len);
 			
 			// Calculate thread ID
 			// 
@@ -1293,7 +1293,7 @@ static DDTTYLogger *sharedInstance;
 			char tid[9];
 			len = snprintf(tid, 9, "%x", logMessage->machThreadID);
 			
-			size_t tidLen = MIN(9-1, len);
+			size_t tidLen = MIN(9-1, (size_t)len);
 			
 			// Here is our format: "%s %s[%i:%s] %s", timestamp, appName, processID, threadID, logMsg
 			
@@ -1423,7 +1423,7 @@ static DDTTYLogger *sharedInstance;
 			const char *escapeSeq = XCODE_COLORS_ESCAPE_SEQ;
 			
 			int result = snprintf(fgCode, 24, "%sfg%u,%u,%u;", escapeSeq, fg_r, fg_g, fg_b);
-			fgCodeLen = MIN(result, (24-1));
+			fgCodeLen = MIN((size_t)result, (24-1));
 		}
 		else
 		{
@@ -1458,7 +1458,7 @@ static DDTTYLogger *sharedInstance;
 			const char *escapeSeq = XCODE_COLORS_ESCAPE_SEQ;
 			
 			int result = snprintf(bgCode, 24, "%sbg%u,%u,%u;", escapeSeq, bg_r, bg_g, bg_b);
-			bgCodeLen = MIN(result, (24-1));
+			bgCodeLen = MIN((size_t)result, (24-1));
 		}
 		else
 		{
@@ -1470,11 +1470,11 @@ static DDTTYLogger *sharedInstance;
 		
 		if (isaColorTTY)
 		{
-			resetCodeLen = snprintf(resetCode, 8, "\033[0m");
+			resetCodeLen = (size_t)snprintf(resetCode, 8, "\033[0m");
 		}
 		else if (isaXcodeColorTTY)
 		{
-			resetCodeLen = snprintf(resetCode, 8, XCODE_COLORS_RESET);
+			resetCodeLen = (size_t)snprintf(resetCode, 8, XCODE_COLORS_RESET);
 		}
 		else
 		{

@@ -72,7 +72,7 @@
 		else
 			_logsDirectory = [[self defaultLogsDirectory] copy];
 		
-		NSKeyValueObservingOptions kvoOptions = NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew;
+		NSKeyValueObservingOptions kvoOptions = (NSKeyValueObservingOptions)(NSKeyValueObservingOptionOld | NSKeyValueObservingOptionNew);
 		
 		[self addObserver:self forKeyPath:@"maximumNumberOfLogFiles" options:kvoOptions context:nil];
 		
@@ -500,7 +500,7 @@
 	__block unsigned long long result;
 	
 	dispatch_block_t block = ^{
-		result = maximumFileSize;
+		result = self->maximumFileSize;
 	};
 	
 	// The design of this method is taken from the DDAbstractLogger implementation.
@@ -519,7 +519,7 @@
 	dispatch_queue_t globalLoggingQueue = [DDLog loggingQueue];
 	
 	dispatch_sync(globalLoggingQueue, ^{
-		dispatch_sync(loggerQueue, block);
+		dispatch_sync(self->loggerQueue, block);
 	});
 	
 	return result;
@@ -529,7 +529,7 @@
 {
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		maximumFileSize = newMaximumFileSize;
+		self->maximumFileSize = newMaximumFileSize;
 		[self maybeRollLogFileDueToSize];
 		
 	}};
@@ -550,7 +550,7 @@
 	dispatch_queue_t globalLoggingQueue = [DDLog loggingQueue];
 	
 	dispatch_async(globalLoggingQueue, ^{
-		dispatch_async(loggerQueue, block);
+		dispatch_async(self->loggerQueue, block);
 	});
 }
 
@@ -559,7 +559,7 @@
 	__block NSTimeInterval result;
 	
 	dispatch_block_t block = ^{
-		result = rollingFrequency;
+		result = self->rollingFrequency;
 	};
 	
 	// The design of this method is taken from the DDAbstractLogger implementation.
@@ -578,7 +578,7 @@
 	dispatch_queue_t globalLoggingQueue = [DDLog loggingQueue];
 	
 	dispatch_sync(globalLoggingQueue, ^{
-		dispatch_sync(loggerQueue, block);
+		dispatch_sync(self->loggerQueue, block);
 	});
 	
 	return result;
@@ -588,7 +588,7 @@
 {
 	dispatch_block_t block = ^{ @autoreleasepool {
 		
-		rollingFrequency = newRollingFrequency;
+		self->rollingFrequency = newRollingFrequency;
 		[self maybeRollLogFileDueToAge];
 	}};
 	
@@ -608,7 +608,7 @@
 	dispatch_queue_t globalLoggingQueue = [DDLog loggingQueue];
 	
 	dispatch_async(globalLoggingQueue, ^{
-		dispatch_async(loggerQueue, block);
+		dispatch_async(self->loggerQueue, block);
 	});
 }
 
@@ -657,7 +657,7 @@
 	#endif
 	
 	uint64_t delay = (uint64_t)([logFileRollingDate timeIntervalSinceNow] * NSEC_PER_SEC);
-	dispatch_time_t fireTime = dispatch_time(DISPATCH_TIME_NOW, delay);
+	dispatch_time_t fireTime = dispatch_time(DISPATCH_TIME_NOW, (long long)delay);
 	
 	dispatch_source_set_timer(rollingTimer, fireTime, DISPATCH_TIME_FOREVER, 1.0);
 	dispatch_resume(rollingTimer);
@@ -686,7 +686,7 @@
 		NSAssert(![self isOnGlobalLoggingQueue], @"Core architecture requirement failure");
 		
 		dispatch_async(globalLoggingQueue, ^{
-			dispatch_async(loggerQueue, block);
+			dispatch_async(self->loggerQueue, block);
 		});
 	}
 }
@@ -1017,14 +1017,19 @@
 
 - (NSString *)description
 {
-	return [@{@"filePath": self.filePath,
-		@"fileName": self.fileName,
-		@"fileAttributes": self.fileAttributes,
-		@"creationDate": self.creationDate,
-		@"modificationDate": self.modificationDate,
-		@"fileSize": @(self.fileSize),
-		@"age": @(self.age),
-		@"isArchived": @(self.isArchived)} description];
+    
+    
+    NSDictionary *dict = @{
+                           @"filePath": self.filePath,
+                           @"fileName": self.fileName,
+                           @"fileAttributes": self.fileAttributes,
+                           @"creationDate": self.creationDate,
+                           @"modificationDate": self.modificationDate,
+                           @"fileSize": @(self.fileSize),
+                           @"age": @(self.age),
+                           @"isArchived": @(self.isArchived)
+                           };
+	return [dict description];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
